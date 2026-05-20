@@ -5,6 +5,8 @@
 
 def main():
     try:
+        print('LOCAL EDIT: running httpie from local source')
+        
         from httpie.core import main
         exit_status = main()
     except KeyboardInterrupt:
@@ -16,4 +18,5 @@ def main():
 
 if __name__ == '__main__':  # pragma: nocover
     import sys
+
     sys.exit(main())
