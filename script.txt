@@ -1,0 +1,11 @@
+Bygg
+
+pip install -e .
+
+cert:
+
+http GET https://wrong.host.badssl.com
+
+http GET https://expired.badssl.com
+
+http GET https://self-signed.badssl.com
