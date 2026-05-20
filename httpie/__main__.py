@@ -5,7 +5,6 @@
 
 def main():
     try:
-        print('LOCAL EDIT: running httpie from local source')
         
         from httpie.core import main
         exit_status = main()

@@ -1,5 +1,6 @@
 import pytest
 import socket
+import ssl
 from unittest import mock
 from pytest import raises
 from requests import Request
@@ -46,6 +47,22 @@ def test_error_custom_dns(program, error_code, expected_message):
     r = http('www.google.com', tolerate_error_exit_status=True)
     assert r.exit_status == ExitStatus.ERROR
     assert expected_message in r.stderr
+
+
+@mock.patch('httpie.core.program')
+def test_error_expired_certificate(program):
+    exc = ConnectionError('Connection aborted')
+    expired_cert_error = ssl.SSLCertVerificationError(
+        1,
+        '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1010)'
+    )
+    exc.__context__ = expired_cert_error
+    exc.request = Request(method='GET', url='https://expired.badssl.com/')
+    program.side_effect = exc
+
+    r = http('expired.badssl.com', tolerate_error_exit_status=True)
+    assert r.exit_status == ExitStatus.ERROR
+    assert 'The server certificate has expired.' in r.stderr
 
 
 def test_max_headers_limit(httpbin_both):

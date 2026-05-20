@@ -1,6 +1,7 @@
 import argparse
 import os
 import platform
+import ssl
 import sys
 import socket
 from typing import List, Optional, Union, Callable
@@ -26,6 +27,33 @@ from .status import ExitStatus, http_status_to_exit_status
 from .utils import unwrap_context
 from .internal.update_warnings import check_updates
 from .internal.daemon_runner import is_daemon_mode, run_daemon_task
+
+EXPIRED_CERTIFICATE_MESSAGE = 'certificate has expired'
+
+# JW: func that returns true when error contains expired certficate message
+def is_expired_certificate_error(exc):
+    #print(exc)
+    if EXPIRED_CERTIFICATE_MESSAGE in str(exc).lower():
+        return True
+    return False
+
+WRONG_HOSTNAME_MESSAGE = 'hostname mismatch'
+
+# JW: func that returns true when error contains wrong hostname message
+def is_wrong_hostname_error(exc):
+    #print(exc)
+    if WRONG_HOSTNAME_MESSAGE in str(exc).lower():
+        return True
+    return False
+
+SELF_SIGNED_CERTIFICATE_MESSAGE = 'self-signed certificate'
+
+# JW: func that returns true when error contains self-signed certificate message
+def is_self_signed_certificate_error(exc):
+    print(exc)
+    if SELF_SIGNED_CERTIFICATE_MESSAGE in str(exc).lower():
+        return True
+    return False
 
 
 # noinspection PyDefaultArgument
@@ -121,15 +149,35 @@ def raw_main(
                 f'Too many redirects'
                 f' (--max-redirects={parsed_args.max_redirects}).'
             )
+
+        # A catch for connection errors: exc
         except requests.exceptions.ConnectionError as exc:
             annotation = None
-            original_exc = unwrap_context(exc)
+            original_exc = unwrap_context(exc) # unwraps gives original exception
+            
+            # DNS error handling
             if isinstance(original_exc, socket.gaierror):
                 if original_exc.errno == socket.EAI_AGAIN:
                     annotation = '\nCouldn’t connect to a DNS server. Please check your connection and try again.'
                 elif original_exc.errno == socket.EAI_NONAME:
                     annotation = '\nCouldn’t resolve the given hostname. Please check the URL and try again.'
                 propagated_exc = original_exc
+            
+            # JW: certificate expired handling
+            elif is_expired_certificate_error(original_exc):
+                annotation = '\n\nThe server certificate has expired.'
+                propagated_exc = original_exc
+
+            # JW: certificate wrong hostname handling
+            elif is_wrong_hostname_error(original_exc):
+                annotation = '\n\nThe server certificate does not match the URL hostname.'
+                propagated_exc = original_exc
+
+            # JW: certificate self-signed handling
+            elif is_self_signed_certificate_error(original_exc):
+                annotation = '\n\nThe server certificate is self-signed and untrusted.'
+                propagated_exc = original_exc
+            
             else:
                 propagated_exc = exc
 
