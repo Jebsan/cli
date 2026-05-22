@@ -28,30 +28,23 @@ from .utils import unwrap_context
 from .internal.update_warnings import check_updates
 from .internal.daemon_runner import is_daemon_mode, run_daemon_task
 
-EXPIRED_CERTIFICATE_MESSAGE = 'certificate has expired'
-
 # JW: func that returns true when error contains expired certficate message
 def is_expired_certificate_error(exc):
-    #print(exc)
-    if EXPIRED_CERTIFICATE_MESSAGE in str(exc).lower():
+    if 'certificate has expired' in str(exc).lower():
         return True
     return False
 
-WRONG_HOSTNAME_MESSAGE = 'hostname mismatch'
 
 # JW: func that returns true when error contains wrong hostname message
 def is_wrong_hostname_error(exc):
-    #print(exc)
-    if WRONG_HOSTNAME_MESSAGE in str(exc).lower():
+    if 'hostname mismatch' in str(exc).lower():
         return True
     return False
 
-SELF_SIGNED_CERTIFICATE_MESSAGE = 'self-signed certificate'
 
 # JW: func that returns true when error contains self-signed certificate message
 def is_self_signed_certificate_error(exc):
-    print(exc)
-    if SELF_SIGNED_CERTIFICATE_MESSAGE in str(exc).lower():
+    if 'self-signed certificate' in str(exc).lower():
         return True
     return False
 
@@ -154,6 +147,8 @@ def raw_main(
         except requests.exceptions.ConnectionError as exc:
             annotation = None
             original_exc = unwrap_context(exc) # unwraps gives original exception
+
+            print(original_exc)
             
             # DNS error handling
             if isinstance(original_exc, socket.gaierror):
