@@ -28,21 +28,17 @@ from .utils import unwrap_context
 from .internal.update_warnings import check_updates
 from .internal.daemon_runner import is_daemon_mode, run_daemon_task
 
-# JW: func that returns true when error contains expired certficate message
+# issuefix: checks for certificate errors in connection errors
 def is_expired_certificate_error(exc):
     if 'certificate has expired' in str(exc).lower():
         return True
     return False
 
-
-# JW: func that returns true when error contains wrong hostname message
 def is_wrong_hostname_error(exc):
     if 'hostname mismatch' in str(exc).lower():
         return True
     return False
 
-
-# JW: func that returns true when error contains self-signed certificate message
 def is_self_signed_certificate_error(exc):
     if 'self-signed certificate' in str(exc).lower():
         return True
@@ -148,7 +144,7 @@ def raw_main(
             annotation = None
             original_exc = unwrap_context(exc) # unwraps gives original exception
 
-            print(original_exc)
+            #print(original_exc)
             
             # DNS error handling
             if isinstance(original_exc, socket.gaierror):
@@ -158,17 +154,18 @@ def raw_main(
                     annotation = '\nCouldn’t resolve the given hostname. Please check the URL and try again.'
                 propagated_exc = original_exc
             
-            # JW: certificate expired handling
+            # issuefix: SSL error handling
+            # certificate expired handling
             elif is_expired_certificate_error(original_exc):
                 annotation = '\n\nThe server certificate has expired.'
                 propagated_exc = original_exc
 
-            # JW: certificate wrong hostname handling
+            # certificate wrong hostname handling
             elif is_wrong_hostname_error(original_exc):
                 annotation = '\n\nThe server certificate does not match the URL hostname.'
                 propagated_exc = original_exc
 
-            # JW: certificate self-signed handling
+            # certificate self-signed handling
             elif is_self_signed_certificate_error(original_exc):
                 annotation = '\n\nThe server certificate is self-signed and untrusted.'
                 propagated_exc = original_exc
