@@ -142,7 +142,7 @@ def raw_main(
         # A catch for connection errors: exc
         except requests.exceptions.ConnectionError as exc:
             annotation = None
-            original_exc = unwrap_context(exc) # unwraps gives original exception
+            original_exc = unwrap_context(exc)
 
             #print(original_exc)
             
@@ -152,23 +152,23 @@ def raw_main(
                     annotation = '\nCouldn’t connect to a DNS server. Please check your connection and try again.'
                 elif original_exc.errno == socket.EAI_NONAME:
                     annotation = '\nCouldn’t resolve the given hostname. Please check the URL and try again.'
-                propagated_exc = original_exc
+                propagated_exc = exc
             
             # issuefix: SSL error handling
             # certificate expired handling
             elif is_expired_certificate_error(original_exc):
                 annotation = '\n\nThe server certificate has expired.'
-                propagated_exc = original_exc
+                propagated_exc = exc
 
             # certificate wrong hostname handling
             elif is_wrong_hostname_error(original_exc):
                 annotation = '\n\nThe server certificate does not match the URL hostname.'
-                propagated_exc = original_exc
+                propagated_exc = exc
 
             # certificate self-signed handling
             elif is_self_signed_certificate_error(original_exc):
                 annotation = '\n\nThe server certificate is self-signed and untrusted.'
-                propagated_exc = original_exc
+                propagated_exc = exc
             
             else:
                 propagated_exc = exc

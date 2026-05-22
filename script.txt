@@ -1,8 +1,4 @@
-Bygg
-
 pip install -e .
-
-cert:
 
 http GET https://wrong.host.badssl.com
 
